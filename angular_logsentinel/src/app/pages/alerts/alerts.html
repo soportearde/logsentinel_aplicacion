@@ -1,0 +1,158 @@
+<div class="alerts-page">
+  <div class="page-header">
+    <h2>Alertas</h2>
+    <span class="header-count">
+      @if (result()) { {{ result()!.total }} alertas }
+    </span>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <select [(ngModel)]="filters.status" (change)="applyFilters()">
+      <option value="">Todos los estados</option>
+      <option value="open">Abierta</option>
+      <option value="in_progress">En proceso</option>
+      <option value="resolved">Resuelta</option>
+      <option value="dismissed">Descartada</option>
+    </select>
+
+    <select [(ngModel)]="filters.severity" (change)="applyFilters()">
+      <option value="">Todas las severidades</option>
+      <option value="critical">Crítica</option>
+      <option value="high">Alta</option>
+      <option value="medium">Media</option>
+      <option value="low">Baja</option>
+    </select>
+
+    <input type="text" placeholder="Sistema origen..." [(ngModel)]="filters.source_system" />
+
+    <input type="date" [(ngModel)]="filters.from" title="Desde" />
+    <input type="date" [(ngModel)]="filters.to" title="Hasta" />
+
+    <button class="btn btn-primary btn-sm" (click)="applyFilters()">Filtrar</button>
+    <button class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert-banner alert-error" style="margin:16px">{{ error() }}</div>
+  }
+
+  <!-- Table -->
+  @if (loading()) {
+    <div class="loading">Cargando alertas...</div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Severidad</th>
+            <th>Título</th>
+            <th>Sistema</th>
+            <th>IP Origen</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (alert of result()?.data ?? []; track alert.id) {
+            <tr (click)="open(alert)" class="clickable-row">
+              <td>
+                <span [class]="severityClass(alert.severity?.name)">
+                  <span class="dot"></span>{{ severityLabel(alert.severity?.name) }}
+                </span>
+              </td>
+              <td class="td-title">{{ alert.title }}</td>
+              <td class="td-mono">{{ alert.source_system ?? '—' }}</td>
+              <td class="td-mono">{{ alert.source_ip ?? '—' }}</td>
+              <td>
+                <span [class]="statusClass(alert.status)">{{ statusLabel(alert.status) }}</span>
+              </td>
+              <td class="td-time">{{ alert.event_timestamp | date:'dd/MM/yy HH:mm' }}</td>
+              <td (click)="$event.stopPropagation()">
+                <select class="status-select" [value]="alert.status" (change)="changeStatus(alert, $any($event.target).value)">
+                  <option value="open">Abierta</option>
+                  <option value="in_progress">En proceso</option>
+                  <option value="resolved">Resuelta</option>
+                  <option value="dismissed">Descartada</option>
+                </select>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7">
+              <div class="empty-state"><span class="empty-icon">🔔</span><p>No hay alertas con los filtros aplicados.</p></div>
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (result() && result()!.last_page > 1) {
+      <div class="pagination">
+        <span class="page-info">
+          Página {{ result()!.current_page }} de {{ result()!.last_page }} · {{ result()!.total }} resultados
+        </span>
+        <button [disabled]="result()!.current_page <= 1" (click)="goTo(result()!.current_page - 1)">← Anterior</button>
+        <button [disabled]="result()!.current_page >= result()!.last_page" (click)="goTo(result()!.current_page + 1)">Siguiente →</button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Detail modal -->
+@if (selected()) {
+  <div class="modal-overlay" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Detalle de alerta #{{ selected()!.id }}</h3>
+        <span class="modal-close" (click)="close()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row">
+          <span class="detail-label">Título</span>
+          <span>{{ selected()!.title }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Severidad</span>
+          <span [class]="severityClass(selected()!.severity?.name)">
+            <span class="dot"></span>{{ severityLabel(selected()!.severity?.name) }}
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Estado</span>
+          <span [class]="statusClass(selected()!.status)">{{ statusLabel(selected()!.status) }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Sistema</span>
+          <span>{{ selected()!.source_system ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">IP origen</span>
+          <code>{{ selected()!.source_ip ?? '—' }}</code>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Usuario</span>
+          <span>{{ selected()!.username ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Mensaje</span>
+          <span>{{ selected()!.message ?? '—' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Fecha del evento</span>
+          <span>{{ selected()!.event_timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+        </div>
+        @if (selected()!.rule) {
+          <div class="detail-row">
+            <span class="detail-label">Regla</span>
+            <code>{{ selected()!.rule!.rule_name }}</code>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="close()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

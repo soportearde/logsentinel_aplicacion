@@ -1,0 +1,96 @@
+<div class="logs-page">
+  <div class="page-header">
+    <h2>Logs en bruto</h2>
+    @if (result()) {
+      <span class="header-count">{{ result()!.total }} registros</span>
+    }
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <input type="text" placeholder="Sistema origen..." [(ngModel)]="filters.source_system" />
+    <input type="text" placeholder="IP origen..." [(ngModel)]="filters.source_ip" />
+    <input type="text" placeholder="Tipo de evento..." [(ngModel)]="filters.event_type" />
+    <input type="date" [(ngModel)]="filters.from" title="Desde" />
+    <input type="date" [(ngModel)]="filters.to" title="Hasta" />
+    <button class="btn btn-primary btn-sm" (click)="applyFilters()">Filtrar</button>
+    <button class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
+  </div>
+
+  @if (error()) {
+    <div class="alert-banner alert-error" style="margin:16px">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Cargando logs...</div>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Sistema</th>
+            <th>IP Origen</th>
+            <th>Usuario</th>
+            <th>Tipo de evento</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of result()?.data ?? []; track log.id) {
+            <tr (click)="open(log)" class="clickable-row">
+              <td class="td-id">{{ log.id }}</td>
+              <td><span class="system-badge">{{ log.source_system }}</span></td>
+              <td class="td-mono">{{ log.source_ip }}</td>
+              <td>{{ log.username || '—' }}</td>
+              <td><span class="event-type">{{ log.event_type }}</span></td>
+              <td class="td-time">{{ log.created_at | date:'dd/MM/yy HH:mm:ss' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6">
+              <div class="empty-state"><span class="empty-icon">📋</span><p>No hay logs con los filtros aplicados.</p></div>
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (result() && result()!.last_page > 1) {
+      <div class="pagination">
+        <span class="page-info">
+          Página {{ result()!.current_page }} de {{ result()!.last_page }} · {{ result()!.total }} registros
+        </span>
+        <button [disabled]="result()!.current_page <= 1" (click)="goTo(result()!.current_page - 1)">← Anterior</button>
+        <button [disabled]="result()!.current_page >= result()!.last_page" (click)="goTo(result()!.current_page + 1)">Siguiente →</button>
+      </div>
+    }
+  }
+</div>
+
+<!-- Detail modal -->
+@if (selected()) {
+  <div class="modal-overlay" (click)="close()">
+    <div class="modal modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Log #{{ selected()!.id }}</h3>
+        <span class="modal-close" (click)="close()">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row"><span class="detail-label">Sistema</span><span>{{ selected()!.source_system }}</span></div>
+        <div class="detail-row"><span class="detail-label">IP origen</span><code>{{ selected()!.source_ip }}</code></div>
+        <div class="detail-row"><span class="detail-label">Usuario</span><span>{{ selected()!.username || '—' }}</span></div>
+        <div class="detail-row"><span class="detail-label">Tipo evento</span><span>{{ selected()!.event_type }}</span></div>
+        <div class="detail-row"><span class="detail-label">Fecha</span><span>{{ selected()!.created_at | date:'dd/MM/yyyy HH:mm:ss' }}</span></div>
+        @if (selected()!.raw_data) {
+          <div class="detail-row detail-row-block">
+            <span class="detail-label">Raw data</span>
+            <pre class="raw-data">{{ selected()!.raw_data | json }}</pre>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="close()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
