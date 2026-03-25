@@ -45,7 +45,7 @@ export class ReportsPage implements OnInit {
   deleteConfirm = signal<number | null>(null);
 
   form = { title: '', filters: { status: '', severity: '', from: '', to: '' } };
-  apiBase = 'http://localhost:8000/api';
+  apiBase = 'http://20.238.17.71/api';
 
   openModal() {
     this.form = { title: '', filters: { status: '', severity: '', from: '', to: '' } };

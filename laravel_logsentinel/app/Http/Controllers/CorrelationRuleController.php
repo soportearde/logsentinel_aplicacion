@@ -4,9 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\CorrelationRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class CorrelationRuleController extends Controller
 {
+    // URL interna del correlador Flask
+    private const CORRELATOR = 'http://localhost:7000';
+
     public function index()
     {
         return response()->json(
@@ -24,9 +29,30 @@ class CorrelationRuleController extends Controller
             'conditions'  => 'nullable|array',
         ]);
 
+        // Guardar en BD
         $rule = CorrelationRule::create($data);
 
-        return response()->json($rule, 201);
+        // Generar código Python vía Claude y activar en el correlador
+        if (!empty($data['description'])) {
+            try {
+                $response = Http::timeout(60)->post(self::CORRELATOR . '/api/rules/generate', [
+                    'rule_name'   => $data['rule_name'],
+                    'description' => $data['description'],
+                ]);
+
+                if (!$response->successful()) {
+                    Log::warning('Correlator generate failed', [
+                        'rule'   => $data['rule_name'],
+                        'status' => $response->status(),
+                        'body'   => $response->body(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('Error llamando al correlador: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json($rule->load('severity'), 201);
     }
 
     public function show(CorrelationRule $correlationRule)
@@ -46,12 +72,31 @@ class CorrelationRuleController extends Controller
 
         $correlationRule->update($data);
 
-        return response()->json($correlationRule);
+        // Sincronizar estado enabled/disabled con el correlador
+        if (array_key_exists('enabled', $data)) {
+            try {
+                Http::timeout(10)->post(self::CORRELATOR . '/api/rules/toggle', [
+                    'rule_name' => $correlationRule->rule_name,
+                    'enabled'   => $data['enabled'],
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Error toggleando regla en correlador: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json($correlationRule->fresh()->load('severity'));
     }
 
     public function destroy(CorrelationRule $correlationRule)
     {
         $correlationRule->delete();
+
+        // Recargar reglas en el correlador para que deje de procesar la eliminada
+        try {
+            Http::timeout(10)->post(self::CORRELATOR . '/api/rules/reload');
+        } catch (\Exception $e) {
+            Log::error('Error recargando reglas tras borrado: ' . $e->getMessage());
+        }
 
         return response()->json(['message' => 'Regla eliminada.']);
     }

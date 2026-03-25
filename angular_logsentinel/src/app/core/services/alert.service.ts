@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Alert, PaginatedResponse } from '../models';
 
-const API = 'http://localhost:8000/api';
+const API = 'http://20.238.17.71/api';
 
 export interface AlertFilters {
   status?: string;

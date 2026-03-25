@@ -96,3 +96,15 @@ export interface PaginatedResponse<T> {
   per_page: number;
   total: number;
 }
+export interface ConnectedSystem {
+  id: number;
+  system_name: string;
+  system_type: string;
+  api_key: string;
+  description?: string;
+  ip_address?: string;
+  status: 'pending' | 'active' | 'inactive';
+  last_seen?: string;
+  created_at?: string;
+  updated_at?: string;
+}

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Report } from '../models';
 
-const API = 'http://localhost:8000/api';
+const API = 'http://20.238.17.71/api';
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {

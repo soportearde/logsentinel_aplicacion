@@ -8,17 +8,22 @@ use App\Http\Controllers\RawLogController;
 use App\Http\Controllers\CorrelationRuleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ConnectedSystemController;
 
-// ── Auth (público) ─────────────────────────────────────────────────────────
+// ── Auth (público) ─────────────────────────────────────────────
 Route::post('/login', [AuthController::class, 'login']);
 
-// ── Rutas protegidas ───────────────────────────────────────────────────────
+// ── Heartbeat del agente (público, se autentica por API key) ──
+Route::post('/systems/heartbeat', [ConnectedSystemController::class, 'heartbeat']);
+
+// ── Rutas protegidas ───────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
 
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
-Route::get('/me',      [AuthController::class, 'me']);
-    // Dashboard (todos los roles autenticados)
+    Route::get('/me',      [AuthController::class, 'me']);
+
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Alertas (analyst + admin)
@@ -52,5 +57,14 @@ Route::get('/me',      [AuthController::class, 'me']);
     Route::middleware('can:viewAny,App\Models\User')->group(function () {
         Route::get('/roles', [UserController::class, 'roles']);
         Route::apiResource('users', UserController::class);
+    });
+
+    // Sistemas conectados (solo admin)
+    Route::middleware('can:viewAny,App\Models\User')->group(function () {
+        Route::apiResource('connected-systems', ConnectedSystemController::class);
+        Route::get('connected-systems/{connected_system}/install-command',
+            [ConnectedSystemController::class, 'installCommand']);
+        Route::post('connected-systems/{connected_system}/regenerate-key',
+            [ConnectedSystemController::class, 'regenerateKey']);
     });
 });

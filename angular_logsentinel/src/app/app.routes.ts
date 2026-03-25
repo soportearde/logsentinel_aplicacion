@@ -39,7 +39,11 @@ export const routes: Routes = [
       {
         path: 'users',
         loadComponent: () => import('./pages/users/users').then(m => m.UsersPage)
-      }
+      },
+      {
+        path: 'systems',
+        loadComponent: () => import('./pages/systems/systems').then(m => m.SystemsPage)
+      },
     ]
   },
   { path: '**', redirectTo: '' }
