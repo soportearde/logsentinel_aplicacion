@@ -8,6 +8,7 @@ class Alert extends Model
 {
     protected $connection = 'alerts_db';
     protected $table = 'alerts';
+    public $timestamps = false;
 
     protected $fillable = [
         'rule_id',

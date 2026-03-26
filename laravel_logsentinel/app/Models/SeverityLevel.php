@@ -8,6 +8,7 @@ class SeverityLevel extends Model
 {
     protected $connection = 'alerts_db';
     protected $table = 'severity_levels';
+    public $timestamps = false;
 
     protected $fillable = ['name', 'level'];
 

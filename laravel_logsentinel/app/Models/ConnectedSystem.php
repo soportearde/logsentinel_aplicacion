@@ -10,6 +10,7 @@ class ConnectedSystem extends Model
     // Usamos la misma conexión que las alertas
     protected $connection = 'alerts_db';
     protected $table = 'connected_systems';
+    public $timestamps = false;
 
     protected $fillable = [
         'system_name',
