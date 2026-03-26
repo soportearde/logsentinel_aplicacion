@@ -63,8 +63,10 @@ export class AlertsPage {
   close()             { this.selected.set(null); }
 
   changeStatus(alert: Alert, status: string) {
+    console.log('[AlertsPage] changeStatus called', { id: alert.id, status });
     this.svc.updateStatus(alert.id, status).subscribe({
       next: updated => {
+        console.log('[AlertsPage] updateStatus OK', updated);
         const r = this.result();
         if (r) {
           const updated_list = { ...r, data: r.data.map(a => a.id === updated.id ? updated : a) };
@@ -76,7 +78,10 @@ export class AlertsPage {
         }
         if (this.selected()?.id === updated.id) this.selected.set(updated);
       },
-      error: () => this.error.set('Error al cambiar el estado de la alerta.')
+      error: (err) => {
+        console.error('[AlertsPage] updateStatus FAILED', err);
+        this.error.set('Error al cambiar el estado de la alerta.');
+      }
     });
   }
 
