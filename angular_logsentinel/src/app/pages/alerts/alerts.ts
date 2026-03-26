@@ -75,7 +75,8 @@ export class AlertsPage {
           }
         }
         if (this.selected()?.id === updated.id) this.selected.set(updated);
-      }
+      },
+      error: () => this.error.set('Error al cambiar el estado de la alerta.')
     });
   }
 

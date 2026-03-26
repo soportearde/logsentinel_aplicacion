@@ -45,6 +45,6 @@ class AlertController extends Controller
 
         $alert->update(['status' => $request->status]);
 
-        return response()->json($alert);
+        return response()->json($alert->load('severity', 'rule'));
     }
 }
