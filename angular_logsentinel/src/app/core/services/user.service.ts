@@ -24,6 +24,10 @@ export class UserService {
     return this.http.put<User>(`${API}/users/${id}`, data);
   }
 
+  toggleActive(id: number) {
+    return this.http.patch<User>(`${API}/users/${id}/toggle-active`, {});
+  }
+
   delete(id: number) {
     return this.http.delete(`${API}/users/${id}`);
   }

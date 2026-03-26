@@ -56,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Usuarios (solo admin)
     Route::middleware('can:viewAny,App\Models\User')->group(function () {
         Route::get('/roles', [UserController::class, 'roles']);
+        Route::patch('/users/{user}/toggle-active', [UserController::class, 'toggleActive']);
         Route::apiResource('users', UserController::class);
     });
 

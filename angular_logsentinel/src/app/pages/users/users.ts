@@ -101,6 +101,19 @@ export class UsersPage implements OnInit {
     }
   }
 
+  toggleActive(user: User) {
+    if (this.isSelf(user.id)) return;
+    this.svc.toggleActive(user.id).subscribe({
+      next: (updated) => {
+        const list = this.users();
+        if (list) {
+          this.cache.set('users', list.map(u => u.id === updated.id ? updated : u));
+        }
+      },
+      error: () => this.error.set('Error al cambiar el estado del usuario.')
+    });
+  }
+
   confirmDelete(id: number) { this.deleteConfirm.set(id); }
   cancelDelete()             { this.deleteConfirm.set(null); }
 

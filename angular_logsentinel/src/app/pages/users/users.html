@@ -41,8 +41,8 @@
                 <span [class]="roleClass(user.role?.name)">{{ roleLabel(user.role?.name) }}</span>
               </td>
               <td>
-                <span class="badge badge-active">
-                  <span class="dot"></span> Activo
+                <span [class]="user.is_active ? 'badge badge-active' : 'badge badge-inactive'">
+                  <span class="dot"></span> {{ user.is_active ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
               <td class="td-actions">
@@ -53,6 +53,17 @@
                   </svg>
                 </button>
                 @if (!isSelf(user.id)) {
+                  <button class="icon-btn" [title]="user.is_active ? 'Desactivar' : 'Activar'" (click)="toggleActive(user)">
+                    @if (user.is_active) {
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                      </svg>
+                    } @else {
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    }
+                  </button>
                   <button class="icon-btn danger" title="Eliminar" (click)="confirmDelete(user.id)">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3,6 5,6 21,6"/>

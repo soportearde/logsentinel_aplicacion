@@ -57,6 +57,13 @@ class UserController extends Controller
         return response()->json(Role::all());
     }
 
+    public function toggleActive(User $user)
+    {
+        $user->update(['is_active' => !$user->is_active]);
+
+        return response()->json($user->load('role'));
+    }
+
     public function destroy(User $user)
     {
         $user->delete();
