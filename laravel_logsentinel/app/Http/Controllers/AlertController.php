@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alert;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AlertController extends Controller
 {
@@ -48,7 +49,7 @@ class AlertController extends Controller
 
     public function destroy(Alert $alert)
     {
-        $this->authorize('delete', $alert);
+        Gate::authorize('delete', $alert);
         $alert->delete();
         return response()->json(['message' => 'Alerta eliminada.']);
     }
