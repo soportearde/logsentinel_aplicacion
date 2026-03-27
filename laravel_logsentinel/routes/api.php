@@ -13,8 +13,9 @@ use App\Http\Controllers\ConnectedSystemController;
 // ── Auth (público) ─────────────────────────────────────────────
 Route::post('/login', [AuthController::class, 'login']);
 
-// ── Heartbeat del agente (público, se autentica por API key) ──
+// ── Endpoints del agente (públicos, se autentican por API key) ──
 Route::post('/systems/heartbeat', [ConnectedSystemController::class, 'heartbeat']);
+Route::post('/log', [RawLogController::class, 'store']);
 
 // ── Rutas protegidas ───────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {

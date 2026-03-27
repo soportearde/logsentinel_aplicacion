@@ -2,11 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConnectedSystem;
 use App\Models\RawLog;
 use Illuminate\Http\Request;
 
 class RawLogController extends Controller
 {
+    /**
+     * Recibe un evento de log desde el agente instalado en un servidor.
+     * Autenticación por X-API-Key (no requiere Sanctum).
+     */
+    public function store(Request $request)
+    {
+        $apiKey = $request->header('X-API-Key');
+
+        if (!$apiKey) {
+            return response()->json(['error' => 'Falta X-API-Key'], 401);
+        }
+
+        $system = ConnectedSystem::where('api_key', $apiKey)->first();
+
+        if (!$system) {
+            return response()->json(['error' => 'API key no reconocida'], 401);
+        }
+
+        $data = $request->all();
+
+        RawLog::create([
+            'source_system' => $data['source_system'] ?? 'unknown',
+            'source_ip'     => $data['source_ip'] ?? $request->ip(),
+            'username'      => $data['username'] ?? null,
+            'event_type'    => $data['event_type'] ?? 'generic_event',
+            'raw_data'      => $data,
+            'created_at'    => isset($data['agent_timestamp'])
+                                ? \Carbon\Carbon::parse($data['agent_timestamp'])
+                                : now(),
+        ]);
+
+        return response()->json(['status' => 'ok']);
+    }
+
     public function index(Request $request)
     {
         $query = RawLog::query();

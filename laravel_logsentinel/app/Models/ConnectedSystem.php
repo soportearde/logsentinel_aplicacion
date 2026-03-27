@@ -42,7 +42,7 @@ class ConnectedSystem extends Model
      */
    public function getInstallCommand(string $baseUrl): string
     {
-        $logUrl = rtrim($baseUrl, '/') . ':5000/log';
+        $logUrl = rtrim($baseUrl, '/') . '/api/log';
         $agentUrl = rtrim($baseUrl, '/');
 
         return "curl -sSL {$agentUrl}/agent/install.sh | sudo bash -s -- "
