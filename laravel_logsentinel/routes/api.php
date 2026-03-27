@@ -29,9 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Alertas (analyst + admin)
     Route::middleware('can:viewAny,App\Models\Alert')->group(function () {
-        Route::get('/alerts',              [AlertController::class, 'index']);
-        Route::get('/alerts/{alert}',      [AlertController::class, 'show']);
+        Route::get('/alerts',                  [AlertController::class, 'index']);
+        Route::get('/alerts/{alert}',          [AlertController::class, 'show']);
         Route::patch('/alerts/{alert}/status', [AlertController::class, 'updateStatus']);
+        Route::delete('/alerts/{alert}',       [AlertController::class, 'destroy']);
     });
 
     // Logs en bruto (analyst + admin)

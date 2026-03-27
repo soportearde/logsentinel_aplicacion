@@ -46,6 +46,13 @@ class AlertController extends Controller
         return response()->json($alert->load('severity', 'rule'));
     }
 
+    public function destroy(Alert $alert)
+    {
+        $this->authorize('delete', $alert);
+        $alert->delete();
+        return response()->json(['message' => 'Alerta eliminada.']);
+    }
+
     public function updateStatus(Request $request, Alert $alert)
     {
         $request->validate([

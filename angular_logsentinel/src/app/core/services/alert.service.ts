@@ -31,4 +31,8 @@ export class AlertService {
   updateStatus(id: number, status: string) {
     return this.http.patch<Alert>(`${API}/alerts/${id}/status`, { status });
   }
+
+  delete(id: number) {
+    return this.http.delete<{ message: string }>(`${API}/alerts/${id}`);
+  }
 }

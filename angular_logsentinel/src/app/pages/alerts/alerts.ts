@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { AlertService, AlertFilters } from '../../core/services/alert.service';
 import { CacheService } from '../../core/services/cache.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Alert, PaginatedResponse } from '../../core/models';
 
 @Component({
@@ -17,6 +18,7 @@ export class AlertsPage implements OnDestroy {
   private svc    = inject(AlertService);
   private cache  = inject(CacheService);
   private router = inject(Router);
+  auth           = inject(AuthService);
 
   private defaultResult = this.cache.signal<PaginatedResponse<Alert>>('alerts_default');
   private filterResult  = signal<PaginatedResponse<Alert> | null>(null);
@@ -82,6 +84,22 @@ export class AlertsPage implements OnDestroy {
 
     this.close();
     this.router.navigate(['/app/logs'], { queryParams: qp });
+  }
+
+  deleteAlert(alert: Alert) {
+    if (!confirm(`¿Eliminar la alerta "${alert.title}"? Esta acción no se puede deshacer.`)) return;
+    this.svc.delete(alert.id).subscribe({
+      next: () => {
+        const r = this.result();
+        if (r) {
+          const updated = { ...r, data: r.data.filter(a => a.id !== alert.id), total: r.total - 1 };
+          if (this.isFiltered()) this.filterResult.set(updated);
+          else this.cache.set('alerts_default', updated);
+        }
+        if (this.selected()?.id === alert.id) this.close();
+      },
+      error: () => this.error.set('Error al eliminar la alerta.')
+    });
   }
 
   changeStatus(alert: Alert, status: string) {

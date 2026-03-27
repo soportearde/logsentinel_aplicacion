@@ -21,4 +21,9 @@ class AlertPolicy
     {
         return in_array($user->role?->name, ['analyst', 'admin']);
     }
+
+    public function delete(User $user, Alert $alert): bool
+    {
+        return $user->role?->name === 'admin';
+    }
 }

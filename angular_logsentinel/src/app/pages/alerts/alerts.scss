@@ -50,6 +50,24 @@
   white-space: nowrap;
 }
 
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-delete {
+  padding: 3px 7px;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: #dc2626;
+  font-size: 11px;
+  cursor: pointer;
+  line-height: 1;
+  &:hover { background: #fee2e2; }
+}
+
 .status-select {
   padding: 4px 8px;
   border: 1px solid var(--border);
