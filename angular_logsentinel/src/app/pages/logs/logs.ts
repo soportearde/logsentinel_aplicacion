@@ -1,10 +1,11 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, JsonPipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { LogService, LogFilters } from '../../core/services/log.service';
 import { CacheService } from '../../core/services/cache.service';
 import { RawLog, PaginatedResponse } from '../../core/models';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-logs',
@@ -12,35 +13,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   templateUrl: './logs.html',
   styleUrl: './logs.scss'
 })
-export class LogsPage implements OnInit {
-  private svc   = inject(LogService);
-  private cache = inject(CacheService);
+export class LogsPage implements OnInit, OnDestroy {
+  private svc     = inject(LogService);
+  private cache   = inject(CacheService);
+  private route   = inject(ActivatedRoute);
 
-  // Vista por defecto: señal reactiva del cache (se actualiza en background automáticamente)
   private defaultResult = this.cache.signal<PaginatedResponse<RawLog>>('logs_default');
-
-  ngOnInit() {
-    // Cargar datos solo si no existen en caché
-    if (!this.defaultResult()) {
-      this.loading.set(true);
-      this.svc.list({ page: 1 }).pipe(
-        takeUntilDestroyed()
-      ).subscribe({
-        next: (data) => {
-          this.cache.set('logs_default', data);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.error.set('Error al cargar logs.');
-          this.loading.set(false);
-        }
-      });
-    }
-  }
-
-  // Vista con filtros: fetch manual
-  private filterResult = signal<PaginatedResponse<RawLog> | null>(null);
-  private isFiltered   = signal(false);
+  private filterResult  = signal<PaginatedResponse<RawLog> | null>(null);
+  private isFiltered    = signal(false);
+  private destroy$      = new Subject<void>();
+  private search$       = new Subject<string>();
 
   result   = computed(() => this.isFiltered() ? this.filterResult() : this.defaultResult());
   loading  = signal(false);
@@ -48,6 +30,36 @@ export class LogsPage implements OnInit {
   selected = signal<RawLog | null>(null);
 
   filters: LogFilters = {};
+
+  constructor() {
+    this.search$.pipe(debounceTime(400), takeUntil(this.destroy$)).subscribe(() => {
+      this.applyFilters();
+    });
+  }
+
+  ngOnInit() {
+    // Si venimos desde una alerta, los query params pre-rellenan los filtros
+    const qp = this.route.snapshot.queryParams;
+    const hasParams = qp['from'] || qp['to'] || qp['source_ip'] || qp['source_system'];
+
+    if (hasParams) {
+      if (qp['source_ip'])     this.filters.source_ip     = qp['source_ip'];
+      if (qp['source_system']) this.filters.source_system = qp['source_system'];
+      if (qp['from'])          this.filters.from          = qp['from'];
+      if (qp['to'])            this.filters.to            = qp['to'];
+      this.applyFilters();
+    } else if (!this.defaultResult()) {
+      this.loading.set(true);
+      this.svc.list({ page: 1 }).pipe(takeUntil(this.destroy$)).subscribe({
+        next: data => { this.cache.set('logs_default', data); this.loading.set(false); },
+        error: () => { this.error.set('Error al cargar logs.'); this.loading.set(false); }
+      });
+    }
+  }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+
+  onSearchInput() { this.search$.next(this.filters.search ?? ''); }
 
   applyFilters() {
     this.isFiltered.set(true);

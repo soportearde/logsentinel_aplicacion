@@ -1,13 +1,27 @@
 <div class="alerts-page">
   <div class="page-header">
     <h2>Alertas</h2>
-    <span class="header-count">
-      @if (result()) { {{ result()!.total }} alertas }
-    </span>
+    @if (result()) {
+      <span class="header-count">{{ result()!.total }} alertas</span>
+    }
   </div>
 
-  <!-- Filters -->
+  <!-- Filtros -->
   <div class="filter-bar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Buscar por título, sistema, IP, usuario..."
+        [(ngModel)]="filters.search"
+        (input)="onSearchInput()"
+      />
+    </div>
+
     <select [(ngModel)]="filters.status" (change)="applyFilters()">
       <option value="">Todos los estados</option>
       <option value="open">Abierta</option>
@@ -16,7 +30,7 @@
       <option value="dismissed">Descartada</option>
     </select>
 
-    <select [(ngModel)]="filters.severity" (change)="applyFilters()">
+    <select [(ngModel)]="filters.severity" (change)="applyFilters()" aria-label="Filtrar por severidad">
       <option value="">Todas las severidades</option>
       <option value="critical">Crítica</option>
       <option value="high">Alta</option>
@@ -24,20 +38,19 @@
       <option value="low">Baja</option>
     </select>
 
-    <input type="text" placeholder="Sistema origen..." [(ngModel)]="filters.source_system" />
+    <div class="date-range">
+      <input type="datetime-local" [(ngModel)]="filters.from" (change)="applyFilters()" title="Desde" />
+      <span class="date-sep">→</span>
+      <input type="datetime-local" [(ngModel)]="filters.to" (change)="applyFilters()" title="Hasta" />
+    </div>
 
-    <input type="date" [(ngModel)]="filters.from" title="Desde" />
-    <input type="date" [(ngModel)]="filters.to" title="Hasta" />
-
-    <button class="btn btn-primary btn-sm" (click)="applyFilters()">Filtrar</button>
-    <button class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
+    <button type="button" class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
   </div>
 
   @if (error()) {
-    <div class="alert-banner alert-error" style="margin:16px">{{ error() }}</div>
+    <div class="alert-banner alert-error alert-banner-margin">{{ error() }}</div>
   }
 
-  <!-- Table -->
   @if (loading()) {
     <div class="loading">Cargando alertas...</div>
   } @else {
@@ -65,9 +78,7 @@
               <td class="td-title">{{ alert.title }}</td>
               <td class="td-mono">{{ alert.source_system ?? '—' }}</td>
               <td class="td-mono">{{ alert.source_ip ?? '—' }}</td>
-              <td>
-                <span [class]="statusClass(alert.status)">{{ statusLabel(alert.status) }}</span>
-              </td>
+              <td><span [class]="statusClass(alert.status)">{{ statusLabel(alert.status) }}</span></td>
               <td class="td-time">{{ alert.event_timestamp | date:'dd/MM/yy HH:mm' }}</td>
               <td (click)="$event.stopPropagation()">
                 <select class="status-select" [value]="alert.status" (change)="changeStatus(alert, $any($event.target).value)">
@@ -87,7 +98,6 @@
       </table>
     </div>
 
-    <!-- Pagination -->
     @if (result() && result()!.last_page > 1) {
       <div class="pagination">
         <span class="page-info">
@@ -100,7 +110,7 @@
   }
 </div>
 
-<!-- Detail modal -->
+<!-- Modal detalle -->
 @if (selected()) {
   <div class="modal-overlay" (click)="close()">
     <div class="modal" (click)="$event.stopPropagation()">
@@ -140,7 +150,7 @@
           <span>{{ selected()!.message ?? '—' }}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">Fecha del evento</span>
+          <span class="detail-label">Fecha evento</span>
           <span>{{ selected()!.event_timestamp | date:'dd/MM/yyyy HH:mm:ss' }}</span>
         </div>
         @if (selected()!.rule) {
@@ -152,6 +162,9 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" (click)="close()">Cerrar</button>
+        <button class="btn btn-primary" (click)="viewRelatedLogs(selected()!)">
+          Ver logs relacionados →
+        </button>
       </div>
     </div>
   </div>

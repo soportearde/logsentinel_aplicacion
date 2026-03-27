@@ -46,6 +46,15 @@ class RawLogController extends Controller
     {
         $query = RawLog::query();
 
+        if ($request->filled('search')) {
+            $q = '%' . $request->search . '%';
+            $query->where(function ($sub) use ($q) {
+                $sub->where('source_system', 'like', $q)
+                    ->orWhere('source_ip', 'like', $q)
+                    ->orWhere('event_type', 'like', $q)
+                    ->orWhere('username', 'like', $q);
+            });
+        }
         if ($request->filled('source_system')) {
             $query->where('source_system', $request->source_system);
         }

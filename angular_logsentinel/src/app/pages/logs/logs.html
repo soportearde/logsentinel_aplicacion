@@ -6,19 +6,33 @@
     }
   </div>
 
-  <!-- Filters -->
+  <!-- Filtros -->
   <div class="filter-bar">
-    <input type="text" placeholder="Sistema origen..." [(ngModel)]="filters.source_system" />
-    <input type="text" placeholder="IP origen..." [(ngModel)]="filters.source_ip" />
-    <input type="text" placeholder="Tipo de evento..." [(ngModel)]="filters.event_type" />
-    <input type="date" [(ngModel)]="filters.from" title="Desde" />
-    <input type="date" [(ngModel)]="filters.to" title="Hasta" />
-    <button class="btn btn-primary btn-sm" (click)="applyFilters()">Filtrar</button>
-    <button class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+        <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Buscar por sistema, IP, tipo de evento, usuario..."
+        [(ngModel)]="filters.search"
+        (input)="onSearchInput()"
+      />
+    </div>
+
+    <div class="date-range">
+      <input type="datetime-local" [(ngModel)]="filters.from" (change)="applyFilters()" title="Desde" />
+      <span class="date-sep">→</span>
+      <input type="datetime-local" [(ngModel)]="filters.to" (change)="applyFilters()" title="Hasta" />
+    </div>
+
+    <button type="button" class="btn btn-outline btn-sm" (click)="resetFilters()">Limpiar</button>
   </div>
 
   @if (error()) {
-    <div class="alert-banner alert-error" style="margin:16px">{{ error() }}</div>
+    <div class="alert-banner alert-error logs-error-margin">{{ error() }}</div>
   }
 
   @if (loading()) {
@@ -60,14 +74,14 @@
         <span class="page-info">
           Página {{ result()!.current_page }} de {{ result()!.last_page }} · {{ result()!.total }} registros
         </span>
-        <button [disabled]="result()!.current_page <= 1" (click)="goTo(result()!.current_page - 1)">← Anterior</button>
-        <button [disabled]="result()!.current_page >= result()!.last_page" (click)="goTo(result()!.current_page + 1)">Siguiente →</button>
+        <button type="button" [disabled]="result()!.current_page <= 1" (click)="goTo(result()!.current_page - 1)">← Anterior</button>
+        <button type="button" [disabled]="result()!.current_page >= result()!.last_page" (click)="goTo(result()!.current_page + 1)">Siguiente →</button>
       </div>
     }
   }
 </div>
 
-<!-- Detail modal -->
+<!-- Modal detalle -->
 @if (selected()) {
   <div class="modal-overlay" (click)="close()">
     <div class="modal modal-wide" (click)="$event.stopPropagation()">
@@ -89,7 +103,7 @@
         }
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" (click)="close()">Cerrar</button>
+        <button type="button" class="btn btn-outline" (click)="close()">Cerrar</button>
       </div>
     </div>
   </div>

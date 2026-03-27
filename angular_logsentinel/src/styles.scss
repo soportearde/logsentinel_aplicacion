@@ -303,7 +303,7 @@ table {
   background: #fff;
   border-bottom: 1px solid var(--border);
 
-  select, input[type="text"], input[type="date"] {
+  select, input[type="text"], input[type="date"], input[type="datetime-local"] {
     padding: 7px 10px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -316,6 +316,50 @@ table {
 
   .spacer { flex: 1; }
 }
+
+/* Barra de búsqueda dinámica */
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-inline-size: 220px;
+
+  .search-icon {
+    position: absolute;
+    inset-inline-start: 10px;
+    inline-size: 16px;
+    block-size: 16px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .search-input {
+    inline-size: 100%;
+    padding: 7px 10px 7px 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    &:focus { border-color: var(--primary); }
+  }
+}
+
+/* Rango de fechas con flecha */
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .date-sep {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+}
+
+.logs-error-margin { margin: 16px; }
 
 /* ---- Pagination ---- */
 .pagination {

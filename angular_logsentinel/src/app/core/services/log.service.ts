@@ -5,6 +5,7 @@ import { RawLog, PaginatedResponse } from '../models';
 const API = 'http://20.238.17.71/api';
 
 export interface LogFilters {
+  search?: string;
   source_system?: string;
   source_ip?: string;
   event_type?: string;

@@ -5,6 +5,7 @@ import { Alert, PaginatedResponse } from '../models';
 const API = 'http://20.238.17.71/api';
 
 export interface AlertFilters {
+  search?: string;
   status?: string;
   severity?: string;
   source_system?: string;

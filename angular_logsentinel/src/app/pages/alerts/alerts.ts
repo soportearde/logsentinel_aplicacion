@@ -1,6 +1,8 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
+import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { AlertService, AlertFilters } from '../../core/services/alert.service';
 import { CacheService } from '../../core/services/cache.service';
 import { Alert, PaginatedResponse } from '../../core/models';
@@ -11,27 +13,33 @@ import { Alert, PaginatedResponse } from '../../core/models';
   templateUrl: './alerts.html',
   styleUrl: './alerts.scss'
 })
-export class AlertsPage {
-  private svc   = inject(AlertService);
-  private cache = inject(CacheService);
+export class AlertsPage implements OnDestroy {
+  private svc    = inject(AlertService);
+  private cache  = inject(CacheService);
+  private router = inject(Router);
 
-  // Vista por defecto: señal reactiva del cache (se actualiza en background automáticamente)
   private defaultResult = this.cache.signal<PaginatedResponse<Alert>>('alerts_default');
+  private filterResult  = signal<PaginatedResponse<Alert> | null>(null);
+  private isFiltered    = signal(false);
+  private destroy$      = new Subject<void>();
+  private search$       = new Subject<string>();
 
-  // Vista con filtros: fetch manual
-  private filterResult = signal<PaginatedResponse<Alert> | null>(null);
-  private isFiltered   = signal(false);
-
-  // La vista actual: usa el cache si no hay filtros, el resultado del filtro si los hay
-  result  = computed(() => this.isFiltered() ? this.filterResult() : this.defaultResult());
-  loading = signal(false);
-  error   = signal('');
+  result   = computed(() => this.isFiltered() ? this.filterResult() : this.defaultResult());
+  loading  = signal(false);
+  error    = signal('');
   selected = signal<Alert | null>(null);
 
   filters: AlertFilters = {};
 
-  statusOptions   = ['', 'open', 'in_progress', 'resolved', 'dismissed'];
-  severityOptions = ['', 'critical', 'high', 'medium', 'low'];
+  constructor() {
+    this.search$.pipe(debounceTime(400), takeUntil(this.destroy$)).subscribe(() => {
+      this.applyFilters();
+    });
+  }
+
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
+
+  onSearchInput() { this.search$.next(this.filters.search ?? ''); }
 
   applyFilters() {
     this.isFiltered.set(true);
@@ -62,32 +70,37 @@ export class AlertsPage {
   open(alert: Alert)  { this.selected.set(alert); }
   close()             { this.selected.set(null); }
 
+  viewRelatedLogs(alert: Alert) {
+    const ts = new Date(alert.event_timestamp);
+    const from = new Date(ts.getTime() - 5 * 60 * 1000);
+    const to   = new Date(ts.getTime() + 5 * 60 * 1000);
+    const fmt  = (d: Date) => d.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+
+    const qp: Record<string, string> = { from: fmt(from), to: fmt(to) };
+    if (alert.source_ip)     qp['source_ip']     = alert.source_ip;
+    if (alert.source_system) qp['source_system']  = alert.source_system;
+
+    this.close();
+    this.router.navigate(['/app/logs'], { queryParams: qp });
+  }
+
   changeStatus(alert: Alert, status: string) {
-    console.log('[AlertsPage] changeStatus called', { id: alert.id, status });
     this.svc.updateStatus(alert.id, status).subscribe({
       next: updated => {
-        console.log('[AlertsPage] updateStatus OK', updated);
         const r = this.result();
         if (r) {
           const updated_list = { ...r, data: r.data.map(a => a.id === updated.id ? updated : a) };
-          if (this.isFiltered()) {
-            this.filterResult.set(updated_list);
-          } else {
-            this.cache.set('alerts_default', updated_list);
-          }
+          if (this.isFiltered()) this.filterResult.set(updated_list);
+          else this.cache.set('alerts_default', updated_list);
         }
         if (this.selected()?.id === updated.id) this.selected.set(updated);
       },
-      error: (err) => {
-        console.error('[AlertsPage] updateStatus FAILED', err);
-        this.error.set('Error al cambiar el estado de la alerta.');
-      }
+      error: () => this.error.set('Error al cambiar el estado de la alerta.')
     });
   }
 
   severityClass(name?: string) { return `badge badge-${name?.toLowerCase() ?? 'low'}`; }
   statusClass(s: string)       { return `badge badge-${s}`; }
-
   severityLabel(k?: string) {
     return { critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' }[k ?? ''] ?? (k ?? '');
   }
