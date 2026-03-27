@@ -40,11 +40,12 @@ export class LogsPage implements OnInit, OnDestroy {
   ngOnInit() {
     // Si venimos desde una alerta, los query params pre-rellenan los filtros
     const qp = this.route.snapshot.queryParams;
-    const hasParams = qp['from'] || qp['to'] || qp['source_ip'] || qp['source_system'];
+    const hasParams = qp['search'] || qp['source_system'] || qp['source_ip'] || qp['from'] || qp['to'];
 
     if (hasParams) {
-      if (qp['source_ip'])     this.filters.source_ip     = qp['source_ip'];
+      if (qp['search'])        this.filters.search        = qp['search'];
       if (qp['source_system']) this.filters.source_system = qp['source_system'];
+      if (qp['source_ip'])     this.filters.source_ip     = qp['source_ip'];
       if (qp['from'])          this.filters.from          = qp['from'];
       if (qp['to'])            this.filters.to            = qp['to'];
       this.applyFilters();

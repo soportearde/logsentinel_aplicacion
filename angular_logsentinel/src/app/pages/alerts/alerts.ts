@@ -73,14 +73,9 @@ export class AlertsPage implements OnDestroy {
   close()             { this.selected.set(null); }
 
   viewRelatedLogs(alert: Alert) {
-    const ts = new Date(alert.event_timestamp);
-    const from = new Date(ts.getTime() - 5 * 60 * 1000);
-    const to   = new Date(ts.getTime() + 5 * 60 * 1000);
-    const fmt  = (d: Date) => d.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
-
-    const qp: Record<string, string> = { from: fmt(from), to: fmt(to) };
-    if (alert.source_ip)     qp['source_ip']     = alert.source_ip;
-    if (alert.source_system) qp['source_system']  = alert.source_system;
+    const qp: Record<string, string> = {};
+    if (alert.source_system) qp['source_system'] = alert.source_system;
+    if (alert.source_ip)     qp['search']        = alert.source_ip;
 
     this.close();
     this.router.navigate(['/app/logs'], { queryParams: qp });
