@@ -26,6 +26,14 @@ class RawLogController extends Controller
             return response()->json(['error' => 'API key no reconocida'], 401);
         }
 
+        if ($system->status !== 'active') {
+            $system->update([
+                'status'     => 'active',
+                'last_seen'  => now(),
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
         $data = $request->all();
 
         RawLog::create([

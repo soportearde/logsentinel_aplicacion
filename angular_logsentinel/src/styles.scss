@@ -314,6 +314,10 @@ table {
     &:focus { border-color: var(--primary); }
   }
 
+  .search-wrap input[type="text"] {
+    padding: 7px 10px 7px 34px;
+  }
+
   .spacer { flex: 1; }
 }
 
@@ -323,19 +327,22 @@ table {
   display: flex;
   align-items: center;
   flex: 1;
-  min-inline-size: 220px;
+  min-width: 220px;
 
   .search-icon {
     position: absolute;
-    inset-inline-start: 10px;
-    inline-size: 16px;
-    block-size: 16px;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
     color: var(--text-muted);
     pointer-events: none;
+    flex-shrink: 0;
   }
 
   .search-input {
-    inline-size: 100%;
+    width: 100%;
     padding: 7px 10px 7px 34px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -343,6 +350,7 @@ table {
     color: var(--text);
     background: #fff;
     outline: none;
+    box-sizing: border-box;
     &:focus { border-color: var(--primary); }
   }
 }
