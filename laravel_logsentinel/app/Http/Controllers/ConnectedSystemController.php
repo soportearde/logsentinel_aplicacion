@@ -92,9 +92,9 @@ class ConnectedSystemController extends Controller
     }
 
     /**
-     * Descarga el plugin de WordPress con la API key ya inyectada.
+     * Descarga el plugin de WordPress con la API key y el endpoint ya inyectados.
      */
-    public function downloadPlugin(ConnectedSystem $connectedSystem)
+    public function downloadPlugin(ConnectedSystem $connectedSystem, Request $request)
     {
         $pluginPath = base_path('../agent/plugin-wordpress.php');
 
@@ -104,7 +104,16 @@ class ConnectedSystemController extends Controller
 
         $content = file_get_contents($pluginPath);
 
-        // Inyectamos la API key como constante al inicio del archivo
+        // Sustituimos el endpoint por la URL real del servidor
+        $baseUrl = $request->query('base_url', 'http://20.238.17.71');
+        $endpoint = rtrim($baseUrl, '/') . '/api/log';
+        $content = preg_replace(
+            "/define\s*\(\s*'LOGSENTINEL_ENDPOINT'\s*,\s*'[^']*'\s*\)/",
+            "define( 'LOGSENTINEL_ENDPOINT', '{$endpoint}' )",
+            $content
+        );
+
+        // Inyectamos la API key como constante
         $content = str_replace(
             "define( 'LOGSENTINEL_ENDPOINT'",
             "define( 'LOGSENTINEL_API_KEY', '" . addslashes($connectedSystem->api_key) . "' );\ndefine( 'LOGSENTINEL_ENDPOINT'",
