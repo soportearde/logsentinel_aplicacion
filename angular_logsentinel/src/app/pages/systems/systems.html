@@ -131,14 +131,52 @@
         <span class="modal-close" (click)="closeModal()">✕</span>
       </div>
       <div class="modal-body">
-        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px">
-          Conéctate al servidor por SSH y pega este comando. El agente se instalará
-          como servicio systemd y empezará a enviar logs automáticamente.
-        </p>
-
         @if (installLoading()) {
           <div class="loading">Generando comando...</div>
+        } @else if (form.system_type === 'wordpress') {
+
+          <!-- ── Instalación WordPress ── -->
+          <p class="install-intro">
+            Descarga el plugin ya configurado con tu API Key e instálalo en WordPress.
+          </p>
+
+          <div class="wp-download-box">
+            <div class="wp-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <div class="wp-download-info">
+              <p class="wp-download-title">Plugin LogSentinel para WordPress</p>
+              <p class="wp-download-sub">El archivo .php ya incluye tu API Key configurada.</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" (click)="downloadPlugin()">Descargar plugin</button>
+          </div>
+
+          <div class="install-steps">
+            <p class="step"><strong>1.</strong> Descarga el plugin pulsando el botón</p>
+            <p class="step"><strong>2.</strong> En WordPress: <strong>Plugins → Añadir nuevo → Subir plugin</strong></p>
+            <p class="step"><strong>3.</strong> Sube el archivo .php descargado y actívalo</p>
+            <p class="step"><strong>4.</strong> El plugin comenzará a enviar logs automáticamente</p>
+          </div>
+
+          <div class="install-info">
+            <p><strong>API Key:</strong> <code>{{ form.api_key }}</code></p>
+            <button class="btn btn-outline btn-sm" (click)="regenerateKey($any(form))">
+              Regenerar API Key
+            </button>
+          </div>
+
         } @else {
+
+          <!-- ── Instalación Linux (agente) ── -->
+          <p class="install-intro">
+            Conéctate al servidor por SSH y pega este comando. El agente se instalará
+            como servicio systemd y empezará a enviar logs automáticamente.
+          </p>
+
           <div class="install-box">
             <pre class="install-command">{{ installCommand() }}</pre>
             <button class="btn btn-copy" (click)="copyCommand()">
@@ -155,10 +193,11 @@
 
           <div class="install-info">
             <p><strong>API Key:</strong> <code>{{ form.api_key }}</code></p>
-         <button class="btn btn-outline btn-sm" (click)="regenerateKey($any(form))">
+            <button class="btn btn-outline btn-sm" (click)="regenerateKey($any(form))">
               Regenerar API Key
             </button>
           </div>
+
         }
       </div>
       <div class="modal-footer">

@@ -67,6 +67,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('connected-systems', ConnectedSystemController::class);
         Route::get('connected-systems/{connected_system}/install-command',
             [ConnectedSystemController::class, 'installCommand']);
+        Route::get('connected-systems/{connected_system}/download-plugin',
+            [ConnectedSystemController::class, 'downloadPlugin']);
         Route::post('connected-systems/{connected_system}/regenerate-key',
             [ConnectedSystemController::class, 'regenerateKey']);
     });

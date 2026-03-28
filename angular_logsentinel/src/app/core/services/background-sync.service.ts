@@ -9,7 +9,7 @@ import { RuleService } from './rule.service';
 import { UserService } from './user.service';
 import { CacheService } from './cache.service';
 
-const INTERVAL_MS = 15_000; // 15 segundos
+const INTERVAL_MS = 5_000; // 15 segundos
 
 @Injectable({ providedIn: 'root' })
 export class BackgroundSyncService {

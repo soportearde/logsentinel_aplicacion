@@ -32,19 +32,17 @@ export class SystemsPage implements OnInit {
   copySuccess    = signal(false);
 
   ngOnInit() {
-        if (!this.systems()) {
-      this.loading.set(true);
-      this.svc.list().subscribe({
-        next: (data) => {
-          this.cache.set('systems', data);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.error.set('Error al cargar sistemas.');
-          this.loading.set(false);
-        }
-      });
-    }
+    this.loading.set(true);
+    this.svc.list().subscribe({
+      next: (data) => {
+        this.cache.set('systems', data);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Error al cargar sistemas.');
+        this.loading.set(false);
+      }
+    });
   }
 
   // Tipos de sistema disponibles
@@ -144,6 +142,26 @@ export class SystemsPage implements OnInit {
     navigator.clipboard.writeText(this.installCommand()).then(() => {
       this.copySuccess.set(true);
       setTimeout(() => this.copySuccess.set(false), 2000);
+    });
+  }
+
+  downloadPlugin() {
+    const id = this.form.id;
+    if (!id) return;
+    this.svc.downloadPlugin(id).subscribe({
+      next: (res) => {
+        const blob = res.body!;
+        const cd = res.headers.get('Content-Disposition') ?? '';
+        const match = cd.match(/filename="?([^"]+)"?/);
+        const filename = match ? match[1] : 'logsentinel-wp.php';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.error.set('Error al descargar el plugin.')
     });
   }
 

@@ -40,6 +40,16 @@ export class SystemService {
   }
 
   /**
+   * Descarga el plugin de WordPress con la API key inyectada.
+   */
+  downloadPlugin(id: number) {
+    return this.http.get(`${API}/connected-systems/${id}/download-plugin`, {
+      responseType: 'blob',
+      observe: 'response',
+    });
+  }
+
+  /**
    * Regenera la API key de un sistema (por si se compromete).
    */
   regenerateKey(id: number) {

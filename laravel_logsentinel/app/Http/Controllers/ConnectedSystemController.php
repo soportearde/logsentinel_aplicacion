@@ -92,6 +92,42 @@ class ConnectedSystemController extends Controller
     }
 
     /**
+     * Descarga el plugin de WordPress con la API key ya inyectada.
+     */
+    public function downloadPlugin(ConnectedSystem $connectedSystem)
+    {
+        $pluginPath = base_path('../agent/plugin-wordpress.php');
+
+        if (!file_exists($pluginPath)) {
+            return response()->json(['error' => 'Plugin no encontrado en el servidor'], 404);
+        }
+
+        $content = file_get_contents($pluginPath);
+
+        // Inyectamos la API key como constante al inicio del archivo
+        $content = str_replace(
+            "define( 'LOGSENTINEL_ENDPOINT'",
+            "define( 'LOGSENTINEL_API_KEY', '" . addslashes($connectedSystem->api_key) . "' );\ndefine( 'LOGSENTINEL_ENDPOINT'",
+            $content
+        );
+
+        // Añadimos la X-API-Key a la cabecera del wp_remote_post
+        $content = str_replace(
+            "'headers'   => [ 'Content-Type' => 'application/json' ]",
+            "'headers'   => [ 'Content-Type' => 'application/json', 'X-API-Key' => LOGSENTINEL_API_KEY ]",
+            $content
+        );
+
+        $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $connectedSystem->system_name);
+        $filename = "logsentinel-wp-{$safeName}.php";
+
+        return response($content, 200, [
+            'Content-Type'        => 'application/octet-stream',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    /**
      * Regenera la API key de un sistema (por si se compromete).
      */
     public function regenerateKey(ConnectedSystem $connectedSystem)

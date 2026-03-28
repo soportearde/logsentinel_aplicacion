@@ -133,3 +133,44 @@
   padding: 4px 10px;
   font-size: 12px;
 }
+
+// ── Intro text del modal de instalación ────────────────────
+
+.install-intro {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-block-end: 16px;
+}
+
+// ── Caja de descarga del plugin WordPress ──────────────────
+
+.wp-download-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-secondary, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: 8px;
+  padding: 16px;
+  margin-block-end: 20px;
+}
+
+.wp-icon {
+  flex-shrink: 0;
+  color: var(--primary, #7c3aed);
+}
+
+.wp-download-info {
+  flex: 1;
+}
+
+.wp-download-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-block-end: 4px;
+}
+
+.wp-download-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
