@@ -6,9 +6,8 @@ Se instala como servicio systemd y envía logs del sistema
 al endpoint del LogCollector de LogSentinel.
 
 Monitoriza:
-  - /var/log/auth.log    → logins SSH, sudo, etc.
-  - /var/log/syslog      → eventos generales del sistema
-  - Logs de nginx/apache si existen
+  - /var/log/auth.log    → logins SSH, sudo, creación de usuarios, permission denied
+  - /var/log/syslog      → creación de usuarios y accesos denegados
 """
 
 import json
@@ -50,12 +49,8 @@ STATE_FILE = "/var/lib/logsentinel/agent_state.json"
 
 # Lista de archivos con su source_system asociado
 LOG_SOURCES = [
-    {"path": "/var/log/auth.log",         "source_system": "ssh"},
-    {"path": "/var/log/syslog",           "source_system": "linux_syslog"},
-    {"path": "/var/log/nginx/access.log", "source_system": "nginx"},
-    {"path": "/var/log/nginx/error.log",  "source_system": "nginx"},
-    {"path": "/var/log/apache2/access.log", "source_system": "apache"},
-    {"path": "/var/log/apache2/error.log",  "source_system": "apache"},
+    {"path": "/var/log/auth.log", "source_system": "ssh"},
+    {"path": "/var/log/syslog",   "source_system": "linux_syslog"},
 ]
 
 
@@ -104,9 +99,11 @@ def save_state(state):
 # PARSEO DE LÍNEAS DE LOG
 # ─────────────────────────────────────────────────────────────
 
-# Patrón para auth.log: "Mar 24 10:15:03 servidor sshd[1234]: mensaje"
+# Patrón para auth.log — soporta dos formatos de timestamp:
+#   Clásico:  "Mar 24 10:15:03 servidor sshd[1234]: mensaje"
+#   ISO 8601: "2026-03-29T16:26:06.456414+02:00 servidor sshd[1234]: mensaje"
 AUTH_PATTERN = re.compile(
-    r"^(\w+\s+\d+\s+[\d:]+)\s+(\S+)\s+(\S+?)(?:\[\d+\])?:\s+(.+)$"
+    r"^(\d{4}-\d{2}-\d{2}T[\d:.+-]+|\w+\s+\d+\s+[\d:]+)\s+(\S+)\s+(\S+?)(?:\[\d+\])?:\s+(.+)$"
 )
 
 # Patrón para detectar login SSH fallido
@@ -124,9 +121,14 @@ SUDO_PATTERN = re.compile(
     r"sudo:\s+(\S+)\s+:.*COMMAND=(.+)"
 )
 
-# Patrón para líneas de acceso de nginx/apache (Combined Log Format)
-ACCESS_LOG_PATTERN = re.compile(
-    r'^([\d.]+)\s+-\s+(\S+)\s+\[.*?\]\s+"(\S+)\s+(\S+)\s+\S+"\s+(\d+)\s+(\d+)'
+# Patrón para creación de usuario
+USER_CREATE_PATTERN = re.compile(
+    r"new user:\s+name=(\S+)|useradd\[.*\]:\s+new user.*name=(\S+)"
+)
+
+# Patrón para acceso denegado (carpetas/ficheros sin permisos)
+PERM_DENIED_PATTERN = re.compile(
+    r"[Pp]ermission denied|DENIED|authentication failure"
 )
 
 
@@ -137,7 +139,6 @@ def parse_auth_line(line, source_system):
         return None
 
     timestamp_str, hostname, service, message = match.groups()
-    now = datetime.now(timezone.utc)
 
     # Base del evento
     event = {
@@ -172,65 +173,62 @@ def parse_auth_line(line, source_system):
         event["command"] = sudo_match.group(2).strip()
         return event
 
-    # Evento genérico de auth.log
-    event["event_type"] = "auth_event"
-    return event
+    # Detectar creación de usuario
+    user_create = USER_CREATE_PATTERN.search(message)
+    if user_create:
+        event["event_type"] = "user_created"
+        event["username"] = user_create.group(1) or user_create.group(2)
+        return event
 
+    # Detectar acceso denegado (carpetas/ficheros sin permisos)
+    if PERM_DENIED_PATTERN.search(message):
+        event["event_type"] = "permission_denied"
+        return event
 
-def parse_access_line(line, source_system):
-    """Parsea una línea de access.log (nginx/apache) en formato Combined."""
-    match = ACCESS_LOG_PATTERN.match(line)
-    if not match:
-        return None
+    # Descartar cualquier otro evento de auth.log
+    return None
 
-    ip, user, method, path, status, size = match.groups()
-
-    return {
-        "source_system": source_system,
-        "event_type": "web_access",
-        "source_ip": ip,
-        "username": user if user != "-" else None,
-        "method": method,
-        "path": path,
-        "status_code": int(status),
-        "response_size": int(size),
-        "raw_line": line.strip(),
-    }
 
 
 def parse_syslog_line(line, source_system):
-    """Parsea una línea genérica de syslog."""
+    """Parsea syslog filtrando solo creación de usuarios y accesos denegados."""
     match = AUTH_PATTERN.match(line)
     if not match:
         return None
 
     timestamp_str, hostname, service, message = match.groups()
 
-    return {
+    event = {
         "source_system": source_system,
-        "event_type": "syslog_event",
         "hostname": hostname,
         "service": service,
         "message": message,
         "raw_line": line.strip(),
     }
 
+    # Creación de usuario
+    user_create = USER_CREATE_PATTERN.search(message)
+    if user_create:
+        event["event_type"] = "user_created"
+        event["username"] = user_create.group(1) or user_create.group(2)
+        return event
+
+    # Acceso denegado
+    if PERM_DENIED_PATTERN.search(message):
+        event["event_type"] = "permission_denied"
+        return event
+
+    # Descartar todo lo demás
+    return None
+
 
 def parse_line(line, source_system):
     """Selecciona el parser correcto según el tipo de fuente."""
     if source_system == "ssh":
         return parse_auth_line(line, source_system)
-    elif source_system in ("nginx", "apache"):
-        return parse_access_line(line, source_system)
     elif source_system == "linux_syslog":
         return parse_syslog_line(line, source_system)
-    else:
-        return {
-            "source_system": source_system,
-            "event_type": "generic_event",
-            "message": line.strip(),
-            "raw_line": line.strip(),
-        }
+    return None
 
 
 # ─────────────────────────────────────────────────────────────

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(xargs grep:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(find c:/logsentinel -name *.py -o -name correlat* -o -name *.flask*)"
     ]
   }
 }

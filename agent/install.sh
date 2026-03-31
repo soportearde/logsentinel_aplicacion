@@ -79,7 +79,7 @@ echo ""
 # 1. INSTALAR DEPENDENCIAS
 # ─────────────────────────────────────────────────────────────
 echo -e "${GREEN}[1/5] Instalando dependencias...${NC}"
-apt-get update -qq
+apt-get update -qq 2>&1 | grep -v "^W:" || true   # ignorar repos rotos de terceros
 apt-get install -y -qq python3 python3-pip > /dev/null 2>&1
 pip3 install requests --break-system-packages -q 2>/dev/null || pip3 install requests -q
 

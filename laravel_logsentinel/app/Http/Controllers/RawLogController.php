@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ConnectedSystem;
 use App\Models\RawLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class RawLogController extends Controller
 {
@@ -46,6 +48,14 @@ class RawLogController extends Controller
                                 ? \Carbon\Carbon::parse($data['agent_timestamp'])
                                 : now(),
         ]);
+
+        // Reenviar evento al collector para que siga el pipeline completo
+        // (collector → normalizer → correlator → alertas)
+        try {
+            Http::timeout(3)->post('http://localhost:5000/log', $data);
+        } catch (\Exception $e) {
+            Log::warning('Collector no disponible: ' . $e->getMessage());
+        }
 
         return response()->json(['status' => 'ok']);
     }
