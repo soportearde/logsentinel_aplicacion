@@ -32,7 +32,7 @@ class CorrelationRuleController extends Controller
         // Guardar en BD
         $rule = CorrelationRule::create($data);
 
-        // Generar código Python vía Claude y activar en el correlador
+        // Generar cï¿½digo Python vï¿½a Claude y activar en el correlador
         if (!empty($data['description'])) {
             try {
                 $response = Http::timeout(60)->post(self::CORRELATOR . '/api/rules/generate', [
@@ -89,6 +89,10 @@ class CorrelationRuleController extends Controller
 
     public function destroy(CorrelationRule $correlationRule)
     {
+        // Desvinculamos las alertas que referencian esta regla antes de borrarla
+        // para evitar el error de foreign key constraint
+        $correlationRule->alerts()->update(['rule_id' => null]);
+
         $correlationRule->delete();
 
         // Recargar reglas en el correlador para que deje de procesar la eliminada
