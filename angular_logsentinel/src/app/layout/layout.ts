@@ -1,4 +1,4 @@
-import { Component, inject, computed, OnInit } from '@angular/core';
+import { Component, inject, computed, OnInit, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { BackgroundSyncService } from '../core/services/background-sync.service';
@@ -14,6 +14,7 @@ export class LayoutComponent implements OnInit {
   private bgSync = inject(BackgroundSyncService);
 
   user = this.auth.currentUser;
+  sidebarOpen = signal(false);
 
   initials = computed(() => {
     const name = this.user()?.name ?? '';
@@ -24,13 +25,22 @@ export class LayoutComponent implements OnInit {
   isAnalyst = computed(() => this.auth.isAnalyst());
 
   ngOnInit() {
-    // Si el usuario ya tiene sesión (recarga de página), arrancamos la sincronización
+    // Si el usuario ya tiene sesiÃ³n (recarga de pÃ¡gina), arrancamos la sincronizaciÃ³n
     if (this.auth.isLoggedIn()) {
       this.bgSync.start();
     }
   }
 
+  toggleSidebar() {
+    this.sidebarOpen.update(v => !v);
+  }
+
+  closeSidebar() {
+    this.sidebarOpen.set(false);
+  }
+
   logout() {
+    this.closeSidebar();
     this.auth.logout();
   }
 }

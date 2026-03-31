@@ -1,6 +1,11 @@
 <div class="app-shell">
+  <!-- Mobile backdrop -->
+  @if (sidebarOpen()) {
+    <div class="sidebar-backdrop" (click)="closeSidebar()"></div>
+  }
+
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" [class.sidebar-open]="sidebarOpen()">
     <div class="sidebar-logo">
       <span class="logo-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -12,7 +17,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/app/dashboard" routerLinkActive="active" class="nav-item">
+      <a routerLink="/app/dashboard" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <rect x="3" y="3" width="7" height="7" rx="1"/>
           <rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -23,7 +28,7 @@
       </a>
 
       @if (isAnalyst()) {
-        <a routerLink="/app/alerts" routerLinkActive="active" class="nav-item">
+        <a routerLink="/app/alerts" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
             <line x1="12" y1="9" x2="12" y2="13"/>
@@ -32,7 +37,7 @@
           Alertas
         </a>
 
-        <a routerLink="/app/logs" routerLinkActive="active" class="nav-item">
+        <a routerLink="/app/logs" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14,2 14,8 20,8"/>
@@ -45,7 +50,7 @@
       }
 
       @if (isAdmin()) {
-        <a routerLink="/app/rules" routerLinkActive="active" class="nav-item">
+        <a routerLink="/app/rules" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
@@ -55,7 +60,7 @@
       }
 
       @if (isAnalyst()) {
-        <a routerLink="/app/reports" routerLinkActive="active" class="nav-item">
+        <a routerLink="/app/reports" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
           </svg>
@@ -64,7 +69,7 @@
       }
 
       @if (isAdmin()) {
-        <a routerLink="/app/users" routerLinkActive="active" class="nav-item">
+        <a routerLink="/app/users" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
             <circle cx="9" cy="7" r="4"/>
@@ -73,7 +78,7 @@
           </svg>
           Usuarios
         </a>
-        <a routerLink="/app/systems" routerLinkActive="active" class="nav-item">
+        <a routerLink="/app/systems" routerLinkActive="active" class="nav-item" (click)="closeSidebar()">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
             <rect x="2" y="2" width="20" height="8" rx="2"/>
             <rect x="2" y="14" width="20" height="8" rx="2"/>
@@ -101,6 +106,13 @@
   <div class="main-area">
     <!-- Top bar -->
     <header class="topbar">
+      <button type="button" class="hamburger" (click)="toggleSidebar()" aria-label="Menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
       <div class="topbar-spacer"></div>
       <div class="topbar-user">
         <span class="user-name">{{ user()?.name }}</span>

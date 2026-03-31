@@ -504,6 +504,72 @@ table {
   color: var(--text-muted);
 }
 
+/* ---- Mobile responsive (global) ---- */
+@media (max-width: 768px) {
+  .card {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+
+    h2 { font-size: 16px; }
+
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .filter-bar {
+    padding: 10px 16px;
+    gap: 8px;
+
+    select,
+    input[type="text"],
+    input[type="date"],
+    input[type="datetime-local"] {
+      flex: 1 1 100%;
+      width: 100%;
+    }
+
+    .spacer { display: none; }
+  }
+
+  .search-wrap {
+    min-width: 0;
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .date-range {
+    flex: 1 1 100%;
+
+    input { flex: 1; }
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 16px;
+
+    .page-info {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  .modal {
+    padding: 20px 16px;
+  }
+
+  .empty-state {
+    padding: 40px 16px;
+  }
+}
+
 /* ---- Alert banner ---- */
 .alert-banner {
   padding: 10px 16px;
