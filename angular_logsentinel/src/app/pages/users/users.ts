@@ -24,8 +24,11 @@ export class UsersPage implements OnInit {
   loading       = signal(false);
   saving        = signal(false);
   error         = signal('');
-  deleteConfirm = signal<number | null>(null);
-  modalMode     = signal<ModalMode | null>(null);
+  deleteConfirm        = signal<number | null>(null);
+  modalMode            = signal<ModalMode | null>(null);
+  editingProtected     = signal(false);
+
+  private readonly PROTECTED_EMAIL = 'admin@logsentinel.com';
 
   form: { name: string; email: string; password: string; role_id: number } =
     { name: '', email: '', password: '', role_id: 2 };
@@ -69,6 +72,7 @@ export class UsersPage implements OnInit {
   openEdit(user: User) {
     this.form = { name: user.name, email: user.email, password: '', role_id: user.role_id ?? user.role?.id ?? 2 };
     (this.form as any)._id = user.id;
+    this.editingProtected.set(user.email === this.PROTECTED_EMAIL);
     this.modalMode.set('edit');
   }
 
@@ -88,7 +92,8 @@ export class UsersPage implements OnInit {
         error: () => { this.saving.set(false); this.error.set('Error al crear el usuario.'); }
       });
     } else {
-      const payload: any = { name: this.form.name, email: this.form.email, role_id: this.form.role_id };
+      const payload: any = { name: this.form.name, email: this.form.email };
+      if (!this.editingProtected()) payload.role_id = this.form.role_id;
       if (this.form.password) payload.password = this.form.password;
       this.svc.update(id, payload).subscribe({
         next: () => {
@@ -134,5 +139,6 @@ export class UsersPage implements OnInit {
     return { admin: 'Administrador', analyst: 'Analista', user: 'Usuario' }[name ?? ''] ?? name ?? '';
   }
 
-  isSelf(id: number) { return id === this.currentUserId; }
+  isSelf(id: number)             { return id === this.currentUserId; }
+  isProtectedAdmin(user: User)   { return user.email === this.PROTECTED_EMAIL; }
 }

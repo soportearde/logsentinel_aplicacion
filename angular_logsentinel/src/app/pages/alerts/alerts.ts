@@ -22,14 +22,15 @@ export class AlertsPage implements OnDestroy {
 
   private defaultResult = this.cache.signal<PaginatedResponse<Alert>>('alerts_default');
   private filterResult  = signal<PaginatedResponse<Alert> | null>(null);
-  private isFiltered    = signal(false);
+  isFiltered            = signal(false);
   private destroy$      = new Subject<void>();
   private search$       = new Subject<string>();
 
-  result   = computed(() => this.isFiltered() ? this.filterResult() : this.defaultResult());
-  loading  = signal(false);
-  error    = signal('');
-  selected = signal<Alert | null>(null);
+  result      = computed(() => this.isFiltered() ? this.filterResult() : this.defaultResult());
+  loading     = signal(false);
+  error       = signal('');
+  selected    = signal<Alert | null>(null);
+  filtersOpen = signal(false);
 
   filters: AlertFilters = {};
 
@@ -52,6 +53,8 @@ export class AlertsPage implements OnDestroy {
       error: () => { this.error.set('Error al cargar alertas.'); this.loading.set(false); }
     });
   }
+
+  toggleFilters() { this.filtersOpen.update(v => !v); }
 
   resetFilters() {
     this.filters = {};

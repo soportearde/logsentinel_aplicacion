@@ -570,6 +570,29 @@ table {
   }
 }
 
+/* ---- Extra small screens (≤480px) ---- */
+@media (max-width: 480px) {
+  .modal .modal-footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .filter-bar {
+    .date-range {
+      flex-direction: column;
+      gap: 8px;
+
+      .date-sep { display: none; }
+      input { width: 100%; }
+    }
+  }
+}
+
 /* ---- Alert banner ---- */
 .alert-banner {
   padding: 10px 16px;

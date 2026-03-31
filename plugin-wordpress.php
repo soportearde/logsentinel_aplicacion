@@ -95,6 +95,7 @@ add_action( 'admin_page_access_denied', function() {
     ] );
 } );
 
+ //── Registro de nuevo usuario administrador ──────────────────────
 add_action( 'user_register', function( $user_id, $userdata = [] ) {
     $role     = $userdata['role'] ?? '';
     $username = $userdata['user_login'] ?? "user_{$user_id}";
@@ -107,20 +108,36 @@ add_action( 'user_register', function( $user_id, $userdata = [] ) {
         return;
     }
 
+    // Marcamos que este usuario acaba de ser registrado como admin
+    // para que set_user_role no duplique el log
+    global $logsentinel_just_registered;
+    $logsentinel_just_registered = $user_id;
+
     logsentinel_send( [
-        'event_type' => 'new_admin_created',
+        'event_type' => 'new_admin_created',       // Se mantiene: es un admin nuevo
         'username'   => $username,
         'message'    => "Nuevo administrador creado: {$username} ({$email})",
     ] );
 }, 10, 2 );
 
+// ── Cambio de rol a administrador (promoción) ───────────────────
 add_action( 'set_user_role', function( $user_id, $role, $old_roles ) {
     if ( $role !== 'administrator' ) {
         return;
     }
+
+    // Si este usuario acaba de ser registrado, el log ya se envió arriba
+    global $logsentinel_just_registered;
+    if ( isset( $logsentinel_just_registered ) && $logsentinel_just_registered === $user_id ) {
+        // Limpiamos la marca y salimos sin enviar nada
+        $logsentinel_just_registered = null;
+        return;
+    }
+
+    // Si llegamos aquí, es un usuario existente al que le cambian el rol
     $user = get_userdata( $user_id );
     logsentinel_send( [
-        'event_type' => 'new_admin_created',
+        'event_type' => 'admin_role_assigned',      // Distinto: es una promoción
         'username'   => $user ? $user->user_login : "user_{$user_id}",
         'message'    => "Usuario promocionado a administrador: " . ( $user ? $user->user_login : $user_id ),
     ] );

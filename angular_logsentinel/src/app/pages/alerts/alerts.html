@@ -4,10 +4,18 @@
     @if (result()) {
       <span class="header-count">{{ result()!.total }} alertas</span>
     }
+    <button type="button" class="filter-toggle-btn" [class.active]="filtersOpen() || isFiltered()" (click)="toggleFilters()" aria-label="Filtros">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      @if (isFiltered()) {
+        <span class="filter-active-dot"></span>
+      }
+    </button>
   </div>
 
   <!-- Filtros -->
-  <div class="filter-bar">
+  <div class="filter-bar" [class.filter-open]="filtersOpen()">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 20 20" fill="none">
         <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
@@ -22,7 +30,7 @@
       />
     </div>
 
-    <select [(ngModel)]="filters.status" (change)="applyFilters()">
+    <select [(ngModel)]="filters.status" (change)="applyFilters()" aria-label="Filtrar por estado">
       <option value="">Todos los estados</option>
       <option value="open">Abierta</option>
       <option value="in_progress">En proceso</option>
@@ -54,7 +62,9 @@
   @if (loading()) {
     <div class="loading">Cargando alertas...</div>
   } @else {
-    <div class="table-wrap">
+
+    <!-- Tabla (escritorio) -->
+    <div class="table-wrap desktop-only">
       <table>
         <thead>
           <tr>
@@ -101,6 +111,36 @@
           }
         </tbody>
       </table>
+    </div>
+
+    <!-- Tarjetas (móvil) -->
+    <div class="mobile-cards">
+      @for (alert of result()?.data ?? []; track alert.id) {
+        <div class="alert-card" [class]="'alert-card sev-' + (alert.severity?.name ?? 'low')" (click)="open(alert)">
+          <div class="alert-card-top">
+            <span [class]="severityClass(alert.severity?.name)">
+              <span class="dot"></span>{{ severityLabel(alert.severity?.name) }}
+            </span>
+            <span [class]="statusClass(alert.status)">{{ statusLabel(alert.status) }}</span>
+          </div>
+          <p class="alert-card-title">{{ alert.title }}</p>
+          <p class="alert-card-time">{{ alert.event_timestamp | date:'dd/MM/yy · HH:mm' }}</p>
+          <div class="alert-card-actions" (click)="$event.stopPropagation()">
+            <select class="status-select" [value]="alert.status" (change)="changeStatus(alert, $any($event.target).value)" aria-label="Cambiar estado de la alerta">
+              <option value="open">Abierta</option>
+              <option value="in_progress">En proceso</option>
+              <option value="resolved">Resuelta</option>
+              <option value="dismissed">Descartada</option>
+            </select>
+            @if (auth.isAdmin()) {
+              <button type="button" class="btn-delete" title="Eliminar alerta" (click)="deleteAlert(alert)">✕</button>
+            }
+            <button type="button" class="btn-card-detail" (click)="open(alert)">Ver detalle →</button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state"><span class="empty-icon">🔔</span><p>No hay alertas con los filtros aplicados.</p></div>
+      }
     </div>
 
     @if (result() && result()!.last_page > 1) {

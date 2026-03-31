@@ -174,3 +174,100 @@
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* ---- Tarjetas móvil ---- */
+.mobile-cards { display: none; }
+
+.system-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.system-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.system-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.system-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.system-card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.system-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.system-card-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.system-card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+
+  .btn { flex: 1; justify-content: center; }
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+
+  .mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .install-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .wp-download-box { flex-wrap: wrap; }
+
+  .install-box {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .install-command {
+    padding-right: 0;
+    font-size: 12px;
+  }
+
+  .btn-copy {
+    position: static;
+    align-self: flex-end;
+    margin-top: 10px;
+  }
+}

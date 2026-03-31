@@ -20,14 +20,15 @@ export class LogsPage implements OnInit, OnDestroy {
 
   private defaultResult = this.cache.signal<PaginatedResponse<RawLog>>('logs_default');
   private filterResult  = signal<PaginatedResponse<RawLog> | null>(null);
-  private isFiltered    = signal(false);
+  isFiltered            = signal(false);
   private destroy$      = new Subject<void>();
   private search$       = new Subject<string>();
 
-  result   = computed(() => this.isFiltered() ? this.filterResult() : this.defaultResult());
-  loading  = signal(false);
-  error    = signal('');
-  selected = signal<RawLog | null>(null);
+  result      = computed(() => this.isFiltered() ? this.filterResult() : this.defaultResult());
+  loading     = signal(false);
+  error       = signal('');
+  selected    = signal<RawLog | null>(null);
+  filtersOpen = signal(false);
 
   filters: LogFilters = {};
 
@@ -71,6 +72,8 @@ export class LogsPage implements OnInit, OnDestroy {
       error: () => { this.error.set('Error al cargar logs.'); this.loading.set(false); }
     });
   }
+
+  toggleFilters() { this.filtersOpen.update(v => !v); }
 
   resetFilters() {
     this.filters = {};

@@ -4,10 +4,18 @@
     @if (result()) {
       <span class="header-count">{{ result()!.total }} registros</span>
     }
+    <button type="button" class="filter-toggle-btn" [class.active]="filtersOpen() || isFiltered()" (click)="toggleFilters()" aria-label="Filtros">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      @if (isFiltered()) {
+        <span class="filter-active-dot"></span>
+      }
+    </button>
   </div>
 
   <!-- Filtros -->
-  <div class="filter-bar">
+  <div class="filter-bar" [class.filter-open]="filtersOpen()">
     <div class="search-wrap">
       <svg class="search-icon" viewBox="0 0 20 20" fill="none">
         <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
@@ -38,7 +46,9 @@
   @if (loading()) {
     <div class="loading">Cargando logs...</div>
   } @else {
-    <div class="table-wrap">
+
+    <!-- Tabla (escritorio) -->
+    <div class="table-wrap desktop-only">
       <table>
         <thead>
           <tr>
@@ -67,6 +77,30 @@
           }
         </tbody>
       </table>
+    </div>
+
+    <!-- Tarjetas (móvil) -->
+    <div class="mobile-cards">
+      @for (log of result()?.data ?? []; track log.id) {
+        <div class="log-card" (click)="open(log)">
+          <div class="log-card-top">
+            <span class="system-badge">{{ log.source_system }}</span>
+            <span class="td-time">{{ log.created_at | date:'dd/MM/yy HH:mm' }}</span>
+          </div>
+          <span class="event-type">{{ log.event_type }}</span>
+          <div class="log-card-meta">
+            <span class="log-card-ip">{{ log.source_ip }}</span>
+            @if (log.username) {
+              <span class="log-card-user">{{ log.username }}</span>
+            }
+          </div>
+          <div class="log-card-footer">
+            <button type="button" class="btn-card-detail" (click)="open(log); $event.stopPropagation()">Ver detalle →</button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state"><span class="empty-icon">📋</span><p>No hay logs con los filtros aplicados.</p></div>
+      }
     </div>
 
     @if (result() && result()!.last_page > 1) {

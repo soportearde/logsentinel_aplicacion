@@ -44,3 +44,13 @@
 }
 
 .modal-sm { max-width: 380px; }
+
+/* ---- Mobile ---- */
+@media (max-width: 768px) {
+  // Ocultar columna # y columna Filtros (tienen clases específicas)
+  .th-id, .td-id,
+  .th-filters, .td-filters { display: none; }
+
+  // Fechas del formulario en columna única
+  .form-row { grid-template-columns: 1fr; }
+}
